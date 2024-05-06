@@ -7,14 +7,19 @@ from discord.ext import commands, tasks
 from dotenv import load_dotenv
 
 import cloud
+import rcon
 
 load_dotenv()
-TOKEN = os.getenv("DISCORD_TOKEN")
+DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 GUILD = os.getenv("DISCORD_GUILD")
-ADMIN = os.getenv("ADMIN")
+ADMIN_ROLE = os.getenv("ADMIN_ROLE")
+SERVER_ADMINS_LIST = os.getenv("SERVER_ADMINS_LIST")
 
 client = commands.Bot(command_prefix="!", intents=discord.Intents.all())
 loading = ["|", "/", "-", "\\"]
+
+server_admins_names = SERVER_ADMINS_LIST
+server_admins = []
 
 
 @client.event
@@ -22,6 +27,12 @@ async def on_ready():
     print(f"{client.user} has connected to Discord!")
 
     guild = discord.utils.get(client.guilds, name=GUILD)
+
+    for member in guild.members:
+        if member.name in server_admins_names:
+            server_admins.append(member)
+
+    print("Ehrnesto admins:", server_admins)
 
     if guild.name == GUILD:
         print(
@@ -36,7 +47,8 @@ async def on_ready():
 @client.hybrid_command()
 async def mine(ctx: commands.Context, arg):
     try:
-        match arg:
+        args = arg.split()
+        match args[0]:
             case "start":
                 code = (
                     cloud.start_vm()
@@ -72,25 +84,44 @@ async def mine(ctx: commands.Context, arg):
                 info = cloud.get_info()
                 await ctx.send(f"Server status is {info['status']}")
 
-            case "test":
-                pass
+            case "rcon":
+                if ctx.message.author not in server_admins:
+                    await ctx.send(
+                        f"{ctx.message.author.mention} "
+                        "does not have rcon permission"
+                    )
+                    return
+
+                if len(args) < 2:
+                    await ctx.send("No command was given")
+                    return
+
+                response = rcon.command(" ".join(args[1:]))
+                if response == "":
+                    response = "OK"
+
+                await ctx.send(f"Server response: {response}")
+
+            case _:
+                await ctx.send(f"Command {args[0]} not found")
     except Exception as e:
         await call_admin(ctx, e)
 
 
 async def call_admin(ctx, e=None):
     guild = discord.utils.get(client.guilds, name=GUILD)
-    admin_role = discord.utils.get(guild.roles, name=ADMIN)
+    admin_role = discord.utils.get(guild.roles, name=ADMIN_ROLE)
     await ctx.send(
-        f"Something went very wrong, call an {admin_role.mention}\nException: {e}"
+        "Something went very wrong, "
+        f"call an {admin_role.mention}\nException: {e}"
     )
 
 
 @tasks.loop(seconds=1.5, count=None)
 async def verify_server(message, status_to_break):
-    await message.edit(
-        content=f"Server is {'starting' if status_to_break == 'RUNNING' else 'stopping'} {loading[verify_server.current_loop % 4]}"
-    )
+    _status = "starting" if status_to_break == "RUNNING" else "stopping"
+    _loading_char = loading[verify_server.current_loop % 4]
+    await message.edit(content=f"Server is {_status} {_loading_char}")
     try:
         server_status = cloud.get_info()["status"]
 
@@ -106,4 +137,5 @@ async def verify_server(message, status_to_break):
         await call_admin(message.channel, e)
 
 
-client.run(TOKEN)
+if __name__ == "__main__":
+    client.run(DISCORD_TOKEN)
