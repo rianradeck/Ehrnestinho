@@ -53,16 +53,18 @@ async def on_ready():
 
 @tasks.loop(seconds=60, count=None)
 async def refresh_activity():
-    try:
+    server_status = cloud.get_info()["status"]
+
+    if server_status == "TERMINATED":
+        await client.change_presence(
+            activity=discord.Game(name="!mine help"),
+            status=discord.Status.idle,
+        )
+    elif server_status == "RUNNING":
         online_players = f"{rcon.command('list')[10]} players online"
         await client.change_presence(
             activity=discord.Game(name=f"at Ehrnesto - {online_players}"),
             status=discord.Status.online,
-        )
-    except Exception:
-        await client.change_presence(
-            activity=discord.Game(name="!mine help"),
-            status=discord.Status.idle,
         )
 
 
