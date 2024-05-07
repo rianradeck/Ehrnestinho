@@ -1,4 +1,13 @@
+```
+Need help using Ehrnestinho?
+
+Here are some useful commands.
+
 help - Display this message
+rcon - Remote console to server
 start - Starts the minecraft server
-stop - Stops the minecraft server
 status - Get minecraft server status
+stop - Stops the minecraft server
+
+If the server is stopped Ehrnestinho will appear as idle!
+```

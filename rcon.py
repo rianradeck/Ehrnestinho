@@ -12,3 +12,7 @@ def command(cmd):
     with MCRcon(SERVER_IP, RCON_PASSWORD) as mcr:
         resp = mcr.command(cmd)
         return resp
+
+
+if __name__ == "__main__":
+    print(command("list"))

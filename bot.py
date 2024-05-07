@@ -15,7 +15,12 @@ GUILD = os.getenv("DISCORD_GUILD")
 ADMIN_ROLE = os.getenv("ADMIN_ROLE")
 SERVER_ADMINS_LIST = os.getenv("SERVER_ADMINS_LIST")
 
-client = commands.Bot(command_prefix="!", intents=discord.Intents.all())
+client = commands.Bot(
+    command_prefix="!",
+    intents=discord.Intents.all(),
+    activity=discord.Game(name="!mine help"),
+    status=discord.Status.idle,
+)
 loading = ["|", "/", "-", "\\"]
 
 server_admins_names = SERVER_ADMINS_LIST
@@ -42,6 +47,23 @@ async def on_ready():
 
     synced = await client.tree.sync()
     print(f"Synced {[cmd for cmd in synced]}.")
+
+    refresh_activity.start()
+
+
+@tasks.loop(seconds=60, count=None)
+async def refresh_activity():
+    try:
+        online_players = f"{rcon.command('list')[10]} players online"
+        await client.change_presence(
+            activity=discord.Game(name=f"at Ehrnesto - {online_players}"),
+            status=discord.Status.online,
+        )
+    except Exception:
+        await client.change_presence(
+            activity=discord.Game(name="!mine help"),
+            status=discord.Status.idle,
+        )
 
 
 @client.hybrid_command()
