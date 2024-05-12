@@ -2,3 +2,5 @@ discord.py==2.3.2
 google-auth==2.25.2
 pre-commit==3.7.0
 mcrcon==0.7.0
+python-dotenv==1.0.1
+requests==2.31.0

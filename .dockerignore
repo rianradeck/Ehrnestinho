@@ -1,0 +1,7 @@
+*pycache*
+.git*
+.pre-commit-config.yaml
+README.md
+.venv
+.env
+gccred.json

@@ -32,7 +32,8 @@ def start_vm():
 
     if response.status_code != 200:
         raise Exception(
-            f"GC API was not able to start the VM. Returned with {response.status_code}"
+            "GC API was not able to start the VM. "
+            f"Returned with {response.status_code}"
         )
 
     return response.status_code
@@ -46,7 +47,8 @@ def stop_vm():
 
     if response.status_code != 200:
         raise Exception(
-            f"GC API was not able to stop the VM. Returned with {response.status_code}"
+            "GC API was not able to start the VM. "
+            f"Returned with {response.status_code}"
         )
 
     return response.status_code
@@ -57,7 +59,8 @@ def get_info():
 
     if response.status_code != 200:
         raise Exception(
-            f"GC API was not able to get status from the VM. Returned with {response.status_code}"
+            "GC API was not able to start the VM. "
+            f"Returned with {response.status_code}"
         )
 
     return response.json()

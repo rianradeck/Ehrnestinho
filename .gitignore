@@ -1,3 +1,5 @@
 .env
 *cred*
 *pycache*
+.venv
+*.ps1
