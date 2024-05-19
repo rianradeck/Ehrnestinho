@@ -4,3 +4,5 @@ pre-commit==3.7.0
 mcrcon==0.7.0
 python-dotenv==1.0.1
 requests==2.31.0
+discord.py[voice]==2.3.2
+pytube==15.0.0

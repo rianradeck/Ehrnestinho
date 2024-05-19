@@ -3,6 +3,7 @@ import os
 import discord
 import discord.ext
 import discord.ext.tasks
+import pytube
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
 
@@ -131,6 +132,26 @@ async def mine(ctx: commands.Context, arg):
     except Exception as e:
         await call_admin(ctx, e)
 
+@client.hybrid_command()
+async def playnesto(ctx: commands.Context, arg):
+    
+    try:
+        subcommand, query = arg.split(maxsplit=1)
+    except ValueError:
+        subcommand = arg
+        query = ""
+
+    match subcommand:
+        case "play":
+            voice_channel = ctx.author.voice.channel
+            voice = await voice_channel.connect()
+            res = pytube.Search(query).results[0]
+            audiostreams = res.streams.filter(only_audio = True, mime_type="audio/mp4")
+            audiostreams[0].download(filename="./song.mp4")
+            voice.play(discord.FFmpegPCMAudio("./song.mp4"))
+        case "stop":
+            await client.voice_clients[0].disconnect()
+    
 
 async def call_admin(ctx, e=None):
     guild = discord.utils.get(client.guilds, name=GUILD)
