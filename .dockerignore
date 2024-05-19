@@ -5,3 +5,4 @@ README.md
 .venv
 .env
 gccred.json
+*.ps1
