@@ -7,8 +7,8 @@ import pytube
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
 
-import cloud
 import rcon
+from server import get_server
 
 load_dotenv()
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
@@ -26,6 +26,8 @@ loading = ["|", "/", "-", "\\"]
 
 server_admins_names = SERVER_ADMINS_LIST
 server_admins = []
+
+server = get_server()
 
 
 @client.event
@@ -54,7 +56,7 @@ async def on_ready():
 
 @tasks.loop(seconds=60, count=None)
 async def refresh_activity():
-    server_status = cloud.get_info()["status"]
+    server_status = server.get_info()["status"]
 
     if server_status == "TERMINATED":
         await client.change_presence(
@@ -76,7 +78,7 @@ async def mine(ctx: commands.Context, arg):
         match args[0]:
             case "start":
                 code = (
-                    cloud.start_vm()
+                    server.start()
                 )  # Only returns 0 or 200, else raises an exception
 
                 if code == 0:
@@ -89,7 +91,7 @@ async def mine(ctx: commands.Context, arg):
 
             case "stop":
                 code = (
-                    cloud.stop_vm()
+                    server.stop()
                 )  # Only returns 0 or 200, else raises an exception
 
                 if code == 0:
@@ -106,7 +108,7 @@ async def mine(ctx: commands.Context, arg):
                 await ctx.send(text_content)
 
             case "status":
-                info = cloud.get_info()
+                info = server.get_info()
                 await ctx.send(f"Server status is {info['status']}")
 
             case "rcon":
@@ -168,7 +170,7 @@ async def verify_server(message, status_to_break):
     _loading_char = loading[verify_server.current_loop % 4]
     await message.edit(content=f"Server is {_status} {_loading_char}")
     try:
-        server_status = cloud.get_info()["status"]
+        server_status = server.get_info()["status"]
 
         if server_status == status_to_break:
             await message.edit(content=f"Server {status_to_break}!")
