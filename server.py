@@ -44,18 +44,14 @@ class LocalServer(Server):
         self.port = int(os.getenv("SERVER_CONTAINER_LISTENER_PORT"))
 
     def start(self):
-        # TODO: listener must return 0 if server is already running
-        # and 200 if it will start
         response = send_tcp_command(self.ip, self.port, "start")
         return response
 
     def stop(self):
-        # TODO: Same as start
         response = send_tcp_command(self.ip, self.port, "stop")
         return response
 
     def get_info(self):
-        # TODO: Make sure listener will give a json just like GC
         response = send_tcp_command(self.ip, self.port, "info")
         return json.loads(response)
 
@@ -72,4 +68,3 @@ if __name__ == "__main__":
     server = LocalServer()
     response = server.get_info()
     print(response)
-    server.stop()
