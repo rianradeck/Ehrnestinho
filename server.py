@@ -42,6 +42,7 @@ class LocalServer(Server):
     def __init__(self):
         self.ip = os.getenv("SERVER_CONTAINER_NAME")
         self.port = int(os.getenv("SERVER_CONTAINER_LISTENER_PORT"))
+        rcon.change_server_ip(self.ip)
 
     def start(self):
         response = send_tcp_command(self.ip, self.port, "start")
