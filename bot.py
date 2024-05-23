@@ -3,7 +3,7 @@ import os
 import discord
 import discord.ext
 import discord.ext.tasks
-import pytube
+import pytubefix
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
 
@@ -134,26 +134,100 @@ async def mine(ctx: commands.Context, arg):
     except Exception as e:
         await call_admin(ctx, e)
 
-@client.hybrid_command()
-async def playnesto(ctx: commands.Context, arg):
-    
-    try:
-        subcommand, query = arg.split(maxsplit=1)
-    except ValueError:
-        subcommand = arg
-        query = ""
+song_queue = []
 
-    match subcommand:
-        case "play":
-            voice_channel = ctx.author.voice.channel
-            voice = await voice_channel.connect()
-            res = pytube.Search(query).results[0]
-            audiostreams = res.streams.filter(only_audio = True, mime_type="audio/mp4")
-            audiostreams[0].download(filename="./song.mp4")
-            voice.play(discord.FFmpegPCMAudio("./song.mp4"))
-        case "stop":
-            await client.voice_clients[0].disconnect()
+@client.hybrid_command()
+async def ehmusic(ctx: commands.Context, subcommand, query=""):
+    global song_queue
+
+    if ctx.author.voice is None:
+        await ctx.send("Please connect to a voice channel")
+        return
     
+    voice_channel = ctx.author.voice.channel
+    voice = ctx.voice_client
+    
+    if voice is None and subcommand != "play":
+        await ctx.send("Bot is not playing anything")
+        return
+
+    try:
+        match subcommand:
+            case "play":
+                try:                    
+                    voice = await voice_channel.connect()
+                except discord.ClientException:
+                    pass
+
+                res = pytubefix.Search(query).videos[0]
+                
+                await ctx.send(
+                    f"The search '{query}' gave the following result\n```{res.title}```"
+                    "The title will be added to the queue"
+                )
+                
+                song_queue.append(res)
+                
+                if len(song_queue) == 1:
+                    await move_queue(ctx, remove=False)
+            case "stop":
+                song_queue = []
+                await voice.disconnect()
+            case "skip":
+                voice.stop()
+            case "pause":
+                await ctx.send("Paused")
+                voice.pause()
+            case "resume":
+                await ctx.send("Resumed")
+                voice.resume()
+            case "queue":
+                if not len(song_queue):
+                    await ctx.send("Queue is empty")
+                    return
+
+                queue_string = r"""```
+   _____                                                 
+  / ____|                                                
+ | (___   ___  _ __   __ _    __ _ _   _  ___ _   _  ___ 
+  \___ \ / _ \| '_ \ / _` |  / _` | | | |/ _ \ | | |/ _ \
+  ____) | (_) | | | | (_| | | (_| | |_| |  __/ |_| |  __/
+ |_____/ \___/|_| |_|\__, |  \__, |\__,_|\___|\__,_|\___|
+                      __/ |     | |                      
+                     |___/      |_|                                     
+
+"""
+
+                queue_string += f"Now playing: {song_queue[0].title}\n\n"
+                for idx, song in enumerate(song_queue):
+                    if idx == 0:
+                        continue
+                    
+                    queue_string += f"{idx:11}: {song.title}\n"
+                queue_string += "```"
+                await ctx.send(queue_string)
+    except Exception as e:
+        await call_admin(ctx, e)
+
+async def move_queue(ctx: commands.Context, remove=True):
+    global song_queue
+    if ctx.voice_client is None:
+        song_queue = []
+        return
+    if remove:
+        song_queue = song_queue[1:]
+    if len(song_queue):
+        song = song_queue[0]
+        await ctx.send(f"Currently playing\n{song.watch_url}")
+        audiostreams = song.streams.filter(only_audio = True, mime_type="audio/mp4")
+        audiostreams[0].download(filename="./song.mp4")
+        ctx.voice_client.play(
+            discord.FFmpegPCMAudio("./song.mp4"),
+            after=lambda x: client.loop.create_task(move_queue(ctx))
+        )
+    else:
+        await ctx.send("Queue has reached its end")
+        await ctx.voice_client.disconnect()
 
 async def call_admin(ctx, e=None):
     guild = discord.utils.get(client.guilds, name=GUILD)
