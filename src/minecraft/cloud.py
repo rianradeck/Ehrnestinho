@@ -1,15 +1,18 @@
 import os
+from pathlib import Path
 
 from dotenv import load_dotenv
 from google.auth.transport.requests import AuthorizedSession
 from google.oauth2 import service_account
+
+root_path = Path(__file__).parent.parent.parent
 
 load_dotenv()
 ENDPOINT = os.getenv("VM_ENDPOINT")
 
 
 def get_auth():
-    credential_file = "./gccred.json"
+    credential_file = root_path / "resources" / "gccred.json"
 
     credentials = service_account.Credentials.from_service_account_file(
         credential_file

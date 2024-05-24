@@ -4,8 +4,8 @@ import socket
 
 from dotenv import load_dotenv
 
-import cloud
-import rcon
+import minecraft.cloud as cloud
+import minecraft.rcon as rcon
 
 load_dotenv()
 
